@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+//import 'screens/login_screen.dart';
+import 'theme/app_theme.dart';
 void main(){
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget{
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Inesh Smart Energy',
-      //theme: AppTheme.dark,
+      theme: AppTheme.dark,
       //home: const LoginScreen(),
     );
   }
