@@ -41,7 +41,7 @@ class FilterTabChip extends StatelessWidget{
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
-            )
+            ),
           ],
         ), 
       ),
