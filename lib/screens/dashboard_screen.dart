@@ -1,8 +1,11 @@
 // screens/dashboard_screen.dart
 import 'package:flutter/material.dart';
-
+import '../models/dashboard_models.dart';
+import '../services/dashboard_service.dart';
+import '../widgets/stat_chip.dart';
 import '../widgets/filter_tab_chip.dart';
-
+import '../widgets/dcu_card.dart';
+import '../widgets/dcu_detail_dialog.dart';
 import '../theme/app_theme.dart';
 
 enum _FilterTab { all, online, offline }
@@ -53,7 +56,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int get _offlineCount => _data?.dcus.where((d) => !d.isOnline).length ?? 0;
   int get _healthPct    => _data?.summary.healthPercent ?? 0;
 
-  
+  String _powerLabel(DcuData d) =>
+      d.isOnline ? formatPower(d.totalMainImportW, _unit) : '—';
+
+  void _showDetail(DcuData dcu) => showDialog(
+    context: context,
+    barrierColor: Colors.black.withOpacity(0.7),
+    builder: (_) => DcuDetailDialog(dcu: dcu, powerUnit: _unit),
   );
 
   @override
@@ -141,7 +150,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
- 
+  Widget _buildStatRow() {
+    final totalPower = _data == null
+        ? '—'
+        : formatPower(_data!.summary.totalImportW(applyMF: _mfEnabled), _unit);
+
+    final chips = [
+      StatChip(label: 'DCUS',    value: '$_totalDcus',   valueColor: AppColors.textPrimary),
+      StatChip(label: 'FEEDERS', value: '$_totalMeters',  valueColor: AppColors.textPrimary),
+      StatChip(label: 'ONLINE',  value: '$_onlineCount',  valueColor: AppColors.online),
+      StatChip(label: 'OFFLINE', value: '$_offlineCount', valueColor: AppColors.offline),
+      StatChip(
+        label: 'HEALTH',
+        value: '$_healthPct%',
+        valueColor: _healthPct >= 80 ? AppColors.online : const Color(0xFFF59E0B),
+      ),
+      StatChip(label: 'IMPORT',  value: totalPower,       valueColor: AppColors.accentLight),
+    ];
+
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        physics: const BouncingScrollPhysics(),
+        itemCount: chips.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (_, i) => chips[i],
+      ),
+    );
+  }
 
   Widget _buildToolbar() {
     return Padding(
@@ -254,5 +292,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  
+  Widget _buildFilterTabs() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      child: Row(
+        children: [
+          FilterTabChip(
+            label: 'All DCUs', count: _data?.dcus.length ?? 0,
+            selected: _filter == _FilterTab.all,
+            onTap: () => setState(() => _filter = _FilterTab.all),
+          ),
+          const SizedBox(width: 8),
+          FilterTabChip(
+            label: 'Online', count: _onlineCount,
+            selected: _filter == _FilterTab.online,
+            countColor: AppColors.online,
+            onTap: () => setState(() => _filter = _FilterTab.online),
+          ),
+          const SizedBox(width: 8),
+          FilterTabChip(
+            label: 'Offline', count: _offlineCount,
+            selected: _filter == _FilterTab.offline,
+            countColor: AppColors.offline,
+            onTap: () => setState(() => _filter = _FilterTab.offline),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.wifi_off_rounded,
+              size: 52, color: AppColors.textMuted),
+          const SizedBox(height: 16),
+          Text(_error!, textAlign: TextAlign.center,
+              style: AppText.label.copyWith(fontSize: 14)),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: _fetch,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildEmpty() => const Padding(
+    padding: EdgeInsets.symmetric(vertical: 48),
+    child: Center(
+      child: Text('No DCUs match this filter.',
+          style: AppText.subheading),
+    ),
+  );
+}
+
+
+class _PulseDot extends StatefulWidget {
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this, duration: const Duration(seconds: 1))..repeat(reverse: true);
+  late final Animation<double> _anim =
+      Tween<double>(begin: 0.3, end: 1.0).animate(_ctrl);
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _anim,
+    child: Container(
+      width: 10, height: 10,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle, color: AppColors.online),
+    ),
+  );
 }
