@@ -190,6 +190,63 @@ class MeterReading{
   bool get isExporting => powerW < 0;
 }
 
+class DcuData{
+  final String dcuId;
+  final String dcuName;
+  final DateTime lastCommunication;
+  final bool isOnline;
+  final List<MeterReading> meters;
 
+  const DcuData({
+    required this.dcuId,
+    required this.dcuName,
+    required this.lastCommunication,
+    required this.isOnline,
+    required this.meters,
+  });
 
+  factory DcuData.fromJson(Map<String, dynamic> j){
+    final meterList = (j['Meters'] as List<dynamic>).map((m)=>MeterReading.fromJson(m as Map<String, dynamic>)).toList();
+
+    return DcuData(
+      dcuId: j['DCUId'] as String, 
+      dcuName: j['DCUName'] as String, 
+      lastCommunication: DateTime.parse(j['DCULastCommunication'] as String), 
+      isOnline: (j['Status'] as String).toLowerCase() == 'online', 
+      meters: meterList,
+    );
+  }
+
+  int get totalMeters => meters.length;
+  int get activeMeters => meters.where((m) => m.isActive).length;
+  int get offlineMeters => meters.where((m) => !m.isActive).length;
+
+  double get totalMainImportW => meters.where((m) => m.meterRole == MeterRole.main && m.isActive && !m.isExporting).fold(0, (sum, m) => sum + m.primaryPowerW);
+
+  String get lastSeenLabel{
+    final diff = DateTime.now().difference(lastCommunication);
+    if (diff.inMinutes<2) return 'Just Now';
+    if(diff.inMinutes < 60) return '${diff.inMinutes} mins ago';
+    if(diff.inHours > 1 && diff.inHours <2) return '${diff.inHours} hr ago';
+    if(diff.inHours < 24 && diff.inHours >= 2) return '${diff.inHours} hrs ago';
+    return '${diff.inDays} days ago';
+  }
+}
+
+class DashboardResponse{
+  final DashboardSummary summary;
+  final List<DcuData> dcus;
+
+  const DashboardResponse({
+    required this.summary,
+    required this.dcus,
+  });
+
+  factory DashboardResponse.fromJson(Map<String, dynamic> json){
+    return DashboardResponse(
+      summary: DashboardSummary.fromJson(json['summary'] as Map<String, dynamic>), 
+      dcus: (json['dcus'] as List<dynamic>).map((d) => DcuData.fromJson(d as Map<String, dynamic>)).toList(),
+    );
+  }
+}
 
