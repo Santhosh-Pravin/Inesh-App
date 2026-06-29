@@ -175,7 +175,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
         physics: const BouncingScrollPhysics(),
         itemCount: chips.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (_, i) => chips[i],
       ),
     );
@@ -298,6 +298,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         children: [
           FilterTabChip(
+            countColor: AppColors.textMuted ,
             label: 'All DCUs', count: _data?.dcus.length ?? 0,
             selected: _filter == _FilterTab.all,
             onTap: () => setState(() => _filter = _FilterTab.all),
