@@ -1,11 +1,11 @@
 // screens/dashboard_screen.dart
 import 'package:flutter/material.dart';
-import '../models/dashboard_models.dart';
-import '../services/dashboard_service.dart';
-import '../widgets/stat_chip.dart';
+
+
+
 import '../widgets/filter_tab_chip.dart';
-import '../widgets/dcu_card.dart';
-import '../widgets/dcu_detail_dialog.dart';
+
+
 import '../theme/app_theme.dart';
 
 enum _FilterTab { all, online, offline }
@@ -61,7 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _showDetail(DcuData dcu) => showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.7),
+    barrierColor: Colors.black.withValues(alpha: 0.7),
     builder: (_) => DcuDetailDialog(dcu: dcu, powerUnit: _unit),
   );
 
@@ -149,7 +149,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
   Widget _buildStatRow() {
     final totalPower = _data == null
         ? '—'
