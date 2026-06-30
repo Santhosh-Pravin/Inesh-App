@@ -185,9 +185,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       StatChip(label: 'IMPORT',  value: totalPower,       valueColor: AppColors.accentLight),
     ];
 
-    // Let the chip height be driven by content, not a fixed pixel value.
-    // SingleChildScrollView + Row avoids the fixed-height SizedBox that
-    // caused the 1px bottom overflow on various screen densities.
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 12, 0, 0),
       child: SingleChildScrollView(
@@ -214,7 +211,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       child: Row(
         children: [
-          // W / KW / MW toggle
           Container(
             decoration: BoxDecoration(
               color: AppColors.bgCard,
@@ -249,7 +245,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 10),
 
-          // Search
           Expanded(
             child: Container(
               height: 38,
