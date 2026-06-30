@@ -1,25 +1,53 @@
-// ignore_for_file: non_constant_identifier_names
+// models/dashboard_models.dart
+// Strongly-typed models + power formatting utility.
+// No Flutter imports – pure Dart so these can be unit-tested standalone.
 
-enum PowerUnit {w, kw, mw}
+// ─────────────────────────────────────────────
+// Power formatting utility
+// ─────────────────────────────────────────────
 
-String formatPower(double watts, PowerUnit unit){
-  switch (unit){
+
+// ─────────────────────────────────────────────
+// Null-safe JSON helpers
+// Any field the real API sends as null falls back to 0 / 0.0
+// instead of throwing a cast exception.
+// ─────────────────────────────────────────────
+
+int    _i(dynamic v, {int fallback = 0})       => (v as num?)?.toInt()    ?? fallback;
+double _d(dynamic v, {double fallback = 0.0})  => (v as num?)?.toDouble() ?? fallback;
+
+
+enum PowerUnit { w, kw, mw }
+
+/// Formats a value given in **watts** to the requested display unit.
+/// Always call this with primary-side watts so every screen converts
+/// the same way.
+///
+///   formatPower(1500,      PowerUnit.kw)  → "1.5 kW"
+///   formatPower(1500000,   PowerUnit.mw)  → "1.5 MW"
+///   formatPower(500,       PowerUnit.w)   → "500 W"
+String formatPower(double watts, PowerUnit unit) {
+  switch (unit) {
     case PowerUnit.w:
       return '${watts.toStringAsFixed(watts >= 100 ? 0 : 1)} W';
     case PowerUnit.kw:
-      final kw = watts/1000;
+      final kw = watts / 1000;
       return '${kw.toStringAsFixed(kw >= 100 ? 0 : 1)} kW';
     case PowerUnit.mw:
-      final mw = watts/1000000;
+      final mw = watts / 1000000;
       return '${mw.toStringAsFixed(mw >= 100 ? 0 : 2)} MW';
   }
 }
-class DashboardSummary{
+
+// ─────────────────────────────────────────────
+// Summary
+// ─────────────────────────────────────────────
+
+class DashboardSummary {
   final int totalDCUs;
   final int totalMeters;
   final int activeMeters;
   final int offlineMeters;
-
   final double mainImportActivePowerW;
   final double mainExportActivePowerW;
   final double mainLagReactivePowerVAR;
@@ -60,39 +88,45 @@ class DashboardSummary{
     required this.checkLeadReactivePowerVAR_MF,
   });
 
-  factory DashboardSummary.fromJson(Map<String, dynamic> j){
+  factory DashboardSummary.fromJson(Map<String, dynamic> j) {
     return DashboardSummary(
-      totalDCUs: j['TotalDCUs'] as int , 
-      totalMeters: j['TotalMeters'] as int, 
-      activeMeters: j['ActiveMeters'] as int, 
-      offlineMeters: j['OfflineMeters'] as int, 
-      mainImportActivePowerW: (j['MainImportActivePowerW'] as num).toDouble(), 
-      mainExportActivePowerW: (j['MainExportActivePowerW'] as num).toDouble(), 
-      mainLagReactivePowerVAR: (j['MainLagReactivePowerVAR'] as num).toDouble(), 
-      mainLeadReactivePowerVAR: (j['MainLeadReactivePowerVAR'] as num).toDouble(), 
-      checkImportActivePowerW: (j['CheckImportActivePowerW'] as num).toDouble(), 
-      checkExportActivePowerW: (j['CheckExportActivePowerW'] as num).toDouble(), 
-      checkLagReactivePowerVAR: (j['CheckLagReactivePowerVAR'] as num).toDouble(), 
-      checkLeadReactivePowerVAR: (j['CheckLeadReactivePowerVAR'] as num).toDouble(), 
-      mainImportActivePowerW_MF: (j['MainImportActivePowerW_MF'] as num).toDouble(), 
-      mainExportActivePowerW_MF: (j['MainExportActivePowerW_MF'] as num).toDouble(), 
-      mainLagReactivePowerVAR_MF: (j['MainLagReactivePowerVAR_MF'] as num).toDouble(), 
-      mainLeadReactivePowerVAR_MF: (j['MainLeadReactivePowerVAR_MF'] as num).toDouble(), 
-      checkImportActivePowerW_MF: (j['CheckImportActivePowerW_MF'] as num).toDouble(), 
-      checkExportActivePowerW_MF: (j['CheckExportActivePowerW_MF'] as num).toDouble(), 
-      checkLagReactivePowerVAR_MF: (j['CheckLagReactivePowerVAR_MF'] as num).toDouble(), 
-      checkLeadReactivePowerVAR_MF: (j['CheckLeadReactivePowerVAR_MF'] as num).toDouble(),
+      totalDCUs: _i(j['TotalDCUs']),
+      totalMeters: _i(j['TotalMeters']),
+      activeMeters: _i(j['ActiveMeters']),
+      offlineMeters: _i(j['OfflineMeters']),
+      mainImportActivePowerW: _d(j['MainImportActivePowerW']),
+      mainExportActivePowerW: _d(j['MainExportActivePowerW']),
+      mainLagReactivePowerVAR: _d(j['MainLagReactivePowerVAR']),
+      mainLeadReactivePowerVAR: _d(j['MainLeadReactivePowerVAR']),
+      checkImportActivePowerW: _d(j['CheckImportActivePowerW']),
+      checkExportActivePowerW: _d(j['CheckExportActivePowerW']),
+      checkLagReactivePowerVAR: _d(j['CheckLagReactivePowerVAR']),
+      checkLeadReactivePowerVAR: _d(j['CheckLeadReactivePowerVAR']),
+      mainImportActivePowerW_MF: _d(j['MainImportActivePowerW_MF']),
+      mainExportActivePowerW_MF: _d(j['MainExportActivePowerW_MF']),
+      mainLagReactivePowerVAR_MF: _d(j['MainLagReactivePowerVAR_MF']),
+      mainLeadReactivePowerVAR_MF: _d(j['MainLeadReactivePowerVAR_MF']),
+      checkImportActivePowerW_MF: _d(j['CheckImportActivePowerW_MF']),
+      checkExportActivePowerW_MF: _d(j['CheckExportActivePowerW_MF']),
+      checkLagReactivePowerVAR_MF: _d(j['CheckLagReactivePowerVAR_MF']),
+      checkLeadReactivePowerVAR_MF: _d(j['CheckLeadReactivePowerVAR_MF']),
     );
   }
 
-  double totalImportW({bool applyMF = false}) => applyMF ? mainImportActivePowerW_MF : mainImportActivePowerW;
+  double totalImportW({bool applyMF = false}) =>
+      applyMF ? mainImportActivePowerW_MF : mainImportActivePowerW;
 
-  int get healthPercent => totalMeters == 0 ? 0 : ((activeMeters/totalMeters) * 100).round();
+  int get healthPercent =>
+      totalMeters == 0 ? 0 : ((activeMeters / totalMeters) * 100).round();
 }
 
-enum MeterRole{main, check, unknown}
+// ─────────────────────────────────────────────
+// MeterReading
+// ─────────────────────────────────────────────
 
-class MeterReading{
+enum MeterRole { main, check, unknown }
+
+class MeterReading {
   final String meterCode;
   final String feederName;
   final MeterRole meterRole;
@@ -104,7 +138,7 @@ class MeterReading{
   final int multiplicationFactorPT;
   final int multiplicationFactor;
   final double rootFactor;
-  final bool applyRootFcator;
+  final bool applyRootFactor;
   final DateTime systemRTC;
   final DateTime meterRTC;
   final bool isActive;
@@ -129,7 +163,7 @@ class MeterReading{
     required this.multiplicationFactorPT,
     required this.multiplicationFactor,
     required this.rootFactor,
-    required this.applyRootFcator,
+    required this.applyRootFactor,
     required this.systemRTC,
     required this.meterRTC,
     required this.isActive,
@@ -140,57 +174,62 @@ class MeterReading{
     required this.voltageY,
     required this.voltageB,
     required this.powerW,
-    required this.powerVAR
+    required this.powerVAR,
   });
 
-  factory MeterReading.fromJson(Map<String, dynamic> j){
+  factory MeterReading.fromJson(Map<String, dynamic> j) {
     return MeterReading(
-      meterCode: j['MeterCode'] as String, 
-      feederName: j['FeederName'] as String, 
-      meterRole: _parseRole(j['MeterRole'] as String), 
-      ctPrimary: j['CTPrimary'] as int, 
-      ctSecondary: j['CTSecondary'] as int, 
-      multiplicationFactorCT: j['MultiplicationFactorCT'] as int, 
-      ptPrimary: j['PTPrimary'] as int, 
-      ptSecondary: j['PTSecondary'] as int, 
-      multiplicationFactorPT: j['MultiplicationFactorPT'] as int, 
-      multiplicationFactor: j['MultiplicationFactor'] as int, 
-      rootFactor: (j['RootFactor'] as num).toDouble(), 
-      applyRootFcator: (j['ApplyRootFcator'] as int) == 1, 
-      systemRTC: DateTime.parse(j['SystemRTC']as String), 
-      meterRTC: DateTime.parse(j['MeterRTC'] as String), 
-      isActive: (j['IsActive'] as int) == 1, 
-      currentR: (j['CurrentR'] as num).toDouble(), 
-      currentY: (j['CurrentY'] as num).toDouble(), 
-      currentB: (j['CurrentB'] as num).toDouble(), 
-      voltageR: (j['VoltageR'] as num).toDouble(), 
-      voltageY: (j['VoltageY'] as num).toDouble(), 
-      voltageB: (j['VoltageB'] as num).toDouble(), 
-      powerW: (j['PowerW'] as num).toDouble(), 
-      powerVAR: (j['PowerVAR'] as num).toDouble(),
+      meterCode: j['MeterCode'] as String,
+      feederName: j['FeederName'] as String,
+      meterRole: _parseRole(j['MeterRole'] as String),
+      ctPrimary: _i(j['CTPrimary']),
+      ctSecondary: _i(j['CTSecondary']),
+      multiplicationFactorCT: _i(j['MultiplicationFactorCT']),
+      ptPrimary: _i(j['PTPrimary']),
+      ptSecondary: _i(j['PTSecondary']),
+      multiplicationFactorPT: _i(j['MultiplicationFactorPT']),
+      multiplicationFactor: _i(j['MultiplicationFactor'], fallback: 1),
+      rootFactor: _d(j['RootFactor'], fallback: 1.732),
+      applyRootFactor: _i(j['ApplyRootFactor']) == 1,
+      systemRTC: DateTime.parse(j['SystemRTC'] as String),
+      meterRTC: DateTime.parse(j['MeterRTC'] as String),
+      isActive: _i(j['IsActive']) == 1,
+      currentR: _d(j['CurrentR']),
+      currentY: _d(j['CurrentY']),
+      currentB: _d(j['CurrentB']),
+      voltageR: _d(j['VoltageR']),
+      voltageY: _d(j['VoltageY']),
+      voltageB: _d(j['VoltageB']),
+      powerW: _d(j['PowerW']),
+      powerVAR: _d(j['PowerVAR']),
     );
   }
 
-  static MeterRole _parseRole(String s){
-    switch (s.toLowerCase()){
-      case 'main' : return MeterRole.main;
-      case 'check' : return MeterRole.check;
-      default : return MeterRole.unknown;
+  static MeterRole _parseRole(String s) {
+    switch (s.toLowerCase()) {
+      case 'main':  return MeterRole.main;
+      case 'check': return MeterRole.check;
+      default:      return MeterRole.unknown;
     }
   }
 
-  double get _scale => multiplicationFactor * (applyRootFcator ? rootFactor : 1.0);
-  double get primaryPowerW => powerW * _scale;
-  double get primaryPowerVAR => powerVAR * _scale;
-  double get primaryCurrentR => currentR * multiplicationFactorCT;
-  double get primaryCurrentY => currentY * multiplicationFactorCT;
-  double get primaryCurrentB => currentB * multiplicationFactorCT;
-  double get  primaryVoltageRkV => (voltageR * multiplicationFactorPT)/ 1000;
-  double get avgPrimaryVoltagekV => ((voltageR + voltageY + voltageB)/3 * multiplicationFactorPT)/1000;
+  double get _scale => multiplicationFactor * (applyRootFactor ? rootFactor : 1.0);
+  double get primaryPowerW    => powerW   * _scale;
+  double get primaryPowerVAR  => powerVAR * _scale;
+  double get primaryCurrentR  => currentR * multiplicationFactorCT;
+  double get primaryCurrentY  => currentY * multiplicationFactorCT;
+  double get primaryCurrentB  => currentB * multiplicationFactorCT;
+  double get primaryVoltageRkV => (voltageR * multiplicationFactorPT) / 1000.0;
+  double get avgPrimaryVoltagekV =>
+      ((voltageR + voltageY + voltageB) / 3.0 * multiplicationFactorPT) / 1000.0;
   bool get isExporting => powerW < 0;
 }
 
-class DcuData{
+// ─────────────────────────────────────────────
+// DcuData
+// ─────────────────────────────────────────────
+
+class DcuData {
   final String dcuId;
   final String dcuName;
   final DateTime lastCommunication;
@@ -205,48 +244,52 @@ class DcuData{
     required this.meters,
   });
 
-  factory DcuData.fromJson(Map<String, dynamic> j){
-    final meterList = (j['Meters'] as List<dynamic>).map((m)=>MeterReading.fromJson(m as Map<String, dynamic>)).toList();
-
+  factory DcuData.fromJson(Map<String, dynamic> j) {
+    final meterList = (j['Meters'] as List<dynamic>)
+        .map((m) => MeterReading.fromJson(m as Map<String, dynamic>))
+        .toList();
     return DcuData(
-      dcuId: j['DCUId'] as String, 
-      dcuName: j['DCUName'] as String, 
-      lastCommunication: DateTime.parse(j['DCULastCommunication'] as String), 
-      isOnline: (j['Status'] as String).toLowerCase() == 'online', 
+      dcuId: j['DCUId'] as String,
+      dcuName: j['DCUName'] as String,
+      lastCommunication: DateTime.parse(j['DCULastCommunication'] as String),
+      isOnline: (j['Status'] as String).toLowerCase() == 'online',
       meters: meterList,
     );
   }
 
-  int get totalMeters => meters.length;
-  int get activeMeters => meters.where((m) => m.isActive).length;
+  int get totalMeters   => meters.length;
+  int get activeMeters  => meters.where((m) => m.isActive).length;
   int get offlineMeters => meters.where((m) => !m.isActive).length;
 
-  double get totalMainImportW => meters.where((m) => m.meterRole == MeterRole.main && m.isActive && !m.isExporting).fold(0, (sum, m) => sum + m.primaryPowerW);
+  double get totalMainImportW => meters
+      .where((m) => m.meterRole == MeterRole.main && m.isActive && !m.isExporting)
+      .fold(0.0, (sum, m) => sum + m.primaryPowerW);
 
-  String get lastSeenLabel{
+  String get lastSeenLabel {
     final diff = DateTime.now().difference(lastCommunication);
-    if (diff.inMinutes<2) return 'Just Now';
-    if(diff.inMinutes < 60) return '${diff.inMinutes} mins ago';
-    if(diff.inHours > 1 && diff.inHours <2) return '${diff.inHours} hr ago';
-    if(diff.inHours < 24 && diff.inHours >= 2) return '${diff.inHours} hrs ago';
+    if (diff.inMinutes < 2)  return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24)   return '${diff.inHours} hr ago';
     return '${diff.inDays} days ago';
   }
 }
 
-class DashboardResponse{
+// ─────────────────────────────────────────────
+// DashboardResponse
+// ─────────────────────────────────────────────
+
+class DashboardResponse {
   final DashboardSummary summary;
   final List<DcuData> dcus;
 
-  const DashboardResponse({
-    required this.summary,
-    required this.dcus,
-  });
+  const DashboardResponse({required this.summary, required this.dcus});
 
-  factory DashboardResponse.fromJson(Map<String, dynamic> json){
+  factory DashboardResponse.fromJson(Map<String, dynamic> json) {
     return DashboardResponse(
-      summary: DashboardSummary.fromJson(json['summary'] as Map<String, dynamic>), 
-      dcus: (json['dcus'] as List<dynamic>).map((d) => DcuData.fromJson(d as Map<String, dynamic>)).toList(),
+      summary: DashboardSummary.fromJson(json['summary'] as Map<String, dynamic>),
+      dcus: (json['dcus'] as List<dynamic>)
+          .map((d) => DcuData.fromJson(d as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
-

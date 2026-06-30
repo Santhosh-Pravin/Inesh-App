@@ -25,6 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   DashboardResponse? _data;
   String?            _error;
+  DateTime?          _lastSynced;
 
   @override
   void initState() { super.initState(); _fetch(); }
@@ -35,17 +36,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
     setState(() {
       _syncing = false;
-      if (r.isSuccess) _data = r.data; else _error = r.error;
+      if (r.isSuccess) {
+        _data = r.data;
+        _lastSynced = DateTime.now();
+      } else {
+        _error = r.error;
+      }
     });
   }
 
   List<DcuData> get _filtered {
     final all = _data?.dcus ?? [];
     return all.where((d) {
-      if (_filter == _FilterTab.online  && !d.isOnline) return false;
-      if (_filter == _FilterTab.offline &&  d.isOnline) return false;
+      if (_filter == _FilterTab.online  && !d.isOnline) { return false; }
+      if (_filter == _FilterTab.offline &&  d.isOnline)  { return false; }
       if (_search.isNotEmpty &&
-          !d.dcuName.toLowerCase().contains(_search.toLowerCase())) return false;
+          !d.dcuName.toLowerCase().contains(_search.toLowerCase())) { return false; }
       return true;
     }).toList();
   }
@@ -58,6 +64,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _powerLabel(DcuData d) =>
       d.isOnline ? formatPower(d.totalMainImportW, _unit) : '—';
+
+  String get _syncLabel {
+    if (_error != null && _data == null) return 'Not synced';
+    if (_syncing) return 'Syncing...';
+    if (_lastSynced == null) return 'Not synced yet';
+    final diff = DateTime.now().difference(_lastSynced!);
+    if (diff.inSeconds < 10)  return 'Synced just now';
+    if (diff.inMinutes < 1)   return 'Synced ${diff.inSeconds}s ago';
+    if (diff.inMinutes < 60)  return 'Synced ${diff.inMinutes} min ago';
+    return 'Synced ${diff.inHours} hr ago';
+  }
 
   void _showDetail(DcuData dcu) => showDialog(
     context: context,
@@ -118,12 +135,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // Pulsing green dot
           _PulseDot(),
           const SizedBox(width: 10),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('DCU Monitor', style: AppText.heading),
-              SizedBox(height: 2),
-              Text('Synced just now', style: AppText.subheading),
+              const Text('DCU Monitor', style: AppText.heading),
+              const SizedBox(height: 2),
+              Text(_syncLabel, style: AppText.subheading),
             ],
           ),
           const Spacer(),
@@ -168,15 +185,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       StatChip(label: 'IMPORT',  value: totalPower,       valueColor: AppColors.accentLight),
     ];
 
-    return SizedBox(
-      height: 92,
-      child: ListView.separated(
+    // Let the chip height be driven by content, not a fixed pixel value.
+    // SingleChildScrollView + Row avoids the fixed-height SizedBox that
+    // caused the 1px bottom overflow on various screen densities.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 12, 0, 0),
+      child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
         physics: const BouncingScrollPhysics(),
-        itemCount: chips.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
-        itemBuilder: (_, i) => chips[i],
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (int i = 0; i < chips.length; i++) ...[
+                chips[i],
+                if (i < chips.length - 1) const SizedBox(width: 10),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -298,7 +326,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         children: [
           FilterTabChip(
-            countColor: AppColors.textMuted ,
+            countColor: Colors.transparent,
             label: 'All DCUs', count: _data?.dcus.length ?? 0,
             selected: _filter == _FilterTab.all,
             onTap: () => setState(() => _filter = _FilterTab.all),
@@ -322,27 +350,56 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildError() => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32),
+  Widget _buildError() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.wifi_off_rounded,
-              size: 52, color: AppColors.textMuted),
+              size: 48, color: AppColors.textMuted),
           const SizedBox(height: 16),
-          Text(_error!, textAlign: TextAlign.center,
-              style: AppText.label.copyWith(fontSize: 14)),
+          const Text('Failed to load dashboard',
+              style: TextStyle(color: AppColors.textPrimary,
+                  fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxHeight: 180),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.bgCard,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Color(0x66EF4444)),
+            ),
+            child: SingleChildScrollView(
+              child: Text(
+                _error ?? 'Unknown error',
+                style: const TextStyle(
+                    color: AppColors.offline,
+                    fontSize: 12,
+                    fontFamily: 'monospace'),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: _fetch,
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
           ),
+          const SizedBox(height: 16),
+          const _NetworkChecklist(),
         ],
       ),
-    ),
-  );
+    );
+  }
 
   Widget _buildEmpty() => const Padding(
     padding: EdgeInsets.symmetric(vertical: 48),
@@ -378,4 +435,46 @@ class _PulseDotState extends State<_PulseDot>
         shape: BoxShape.circle, color: AppColors.online),
     ),
   );
+}
+
+
+class _NetworkChecklist extends StatelessWidget {
+  const _NetworkChecklist();
+
+  @override
+  Widget build(BuildContext context) {
+    const items = [
+      '• Phone and server on the same Wi-Fi / VPN?',
+      '• AndroidManifest has INTERNET permission?',
+      '• android:usesCleartextTraffic="true" set?',
+      '• Server running at 118.91.232.233:3001?',
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Check list',
+              style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5)),
+          const SizedBox(height: 6),
+          ...items.map((s) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(s,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 11)),
+              )),
+        ],
+      ),
+    );
+  }
 }
