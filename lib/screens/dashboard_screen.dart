@@ -472,7 +472,8 @@ class _NetworkChecklist extends StatelessWidget {
                 child: Text(s,
                     style: const TextStyle(
                         color: AppColors.textSecondary, fontSize: 11)),
-              )),
+              )
+            ),
         ],
       ),
     );
