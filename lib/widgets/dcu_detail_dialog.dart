@@ -177,7 +177,7 @@ class _DcuDetailDialogState extends State<DcuDetailDialog> {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: chips.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
           final (value, label) = chips[i];
           final sel = _filter == value;
@@ -206,10 +206,6 @@ class _DcuDetailDialogState extends State<DcuDetailDialog> {
     );
   }
 }
-
-// ─────────────────────────────────────────────
-// _MeterCard
-// ─────────────────────────────────────────────
 
 class _MeterCard extends StatelessWidget {
   final MeterReading meter;

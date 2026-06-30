@@ -1,31 +1,8 @@
-// models/dashboard_models.dart
-// Strongly-typed models + power formatting utility.
-// No Flutter imports – pure Dart so these can be unit-tested standalone.
-
-// ─────────────────────────────────────────────
-// Power formatting utility
-// ─────────────────────────────────────────────
-
-
-// ─────────────────────────────────────────────
-// Null-safe JSON helpers
-// Any field the real API sends as null falls back to 0 / 0.0
-// instead of throwing a cast exception.
-// ─────────────────────────────────────────────
-
 int    _i(dynamic v, {int fallback = 0})       => (v as num?)?.toInt()    ?? fallback;
 double _d(dynamic v, {double fallback = 0.0})  => (v as num?)?.toDouble() ?? fallback;
 
-
 enum PowerUnit { w, kw, mw }
 
-/// Formats a value given in **watts** to the requested display unit.
-/// Always call this with primary-side watts so every screen converts
-/// the same way.
-///
-///   formatPower(1500,      PowerUnit.kw)  → "1.5 kW"
-///   formatPower(1500000,   PowerUnit.mw)  → "1.5 MW"
-///   formatPower(500,       PowerUnit.w)   → "500 W"
 String formatPower(double watts, PowerUnit unit) {
   switch (unit) {
     case PowerUnit.w:
@@ -39,9 +16,6 @@ String formatPower(double watts, PowerUnit unit) {
   }
 }
 
-// ─────────────────────────────────────────────
-// Summary
-// ─────────────────────────────────────────────
 
 class DashboardSummary {
   final int totalDCUs;
@@ -120,9 +94,6 @@ class DashboardSummary {
       totalMeters == 0 ? 0 : ((activeMeters / totalMeters) * 100).round();
 }
 
-// ─────────────────────────────────────────────
-// MeterReading
-// ─────────────────────────────────────────────
 
 enum MeterRole { main, check, unknown }
 
@@ -225,9 +196,6 @@ class MeterReading {
   bool get isExporting => powerW < 0;
 }
 
-// ─────────────────────────────────────────────
-// DcuData
-// ─────────────────────────────────────────────
 
 class DcuData {
   final String dcuId;
@@ -273,10 +241,6 @@ class DcuData {
     return '${diff.inDays} days ago';
   }
 }
-
-// ─────────────────────────────────────────────
-// DashboardResponse
-// ─────────────────────────────────────────────
 
 class DashboardResponse {
   final DashboardSummary summary;

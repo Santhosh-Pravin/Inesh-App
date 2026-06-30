@@ -16,8 +16,6 @@ class StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Scale chip padding and font size relative to screen width so it
-    // never overflows on small phones or looks too tiny on tablets.
     final sw         = MediaQuery.of(context).size.width;
     final hPad       = sw < 360 ? 10.0 : 14.0;
     final vPad       = sw < 360 ?  8.0 : 11.0;
