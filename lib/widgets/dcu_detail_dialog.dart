@@ -294,8 +294,8 @@ class _MeterCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(children: [
             Expanded(child: _metric('MF', '${meter.multiplicationFactor}')),
-            Expanded(child: _metric('CT', '${meter.ctPrimary}/${meter.ctSecondary}')),
-            Expanded(child: _metric('PT', '${meter.ptPrimary}/${meter.ptSecondary}')),
+            Expanded(child: _metric('CT', (meter.ctPrimary / meter.ctSecondary).toStringAsFixed(0))),
+            Expanded(child: _metric('PT', (meter.ptPrimary / meter.ptSecondary).toStringAsFixed(0))),
           ]),
         ],
       ),

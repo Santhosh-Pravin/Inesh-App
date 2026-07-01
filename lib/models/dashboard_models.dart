@@ -87,8 +87,9 @@ class DashboardSummary {
     );
   }
 
-  double totalImportW({bool applyMF = false}) =>
-      applyMF ? mainImportActivePowerW_MF : mainImportActivePowerW;
+  // Always returns the raw (non-MF) value now — applyMF flag kept
+  // only so callers don't break, but it no longer changes anything.
+  double totalImportW({bool applyMF = false}) => mainImportActivePowerW;
 
   int get healthPercent =>
       totalMeters == 0 ? 0 : ((activeMeters / totalMeters) * 100).round();
@@ -184,15 +185,14 @@ class MeterReading {
     }
   }
 
-  double get _scale => multiplicationFactor * (applyRootFactor ? rootFactor : 1.0);
-  double get primaryPowerW    => powerW   * _scale;
-  double get primaryPowerVAR  => powerVAR * _scale;
-  double get primaryCurrentR  => currentR * multiplicationFactorCT;
-  double get primaryCurrentY  => currentY * multiplicationFactorCT;
-  double get primaryCurrentB  => currentB * multiplicationFactorCT;
-  double get primaryVoltageRkV => (voltageR * multiplicationFactorPT) / 1000.0;
-  double get avgPrimaryVoltagekV =>
-      ((voltageR + voltageY + voltageB) / 3.0 * multiplicationFactorPT) / 1000.0;
+  // --- Raw pass-through values, no CT/PT/MF/RootFactor math applied ---
+  double get primaryPowerW     => powerW;
+  double get primaryPowerVAR   => powerVAR;
+  double get primaryCurrentR   => currentR;
+  double get primaryCurrentY   => currentY;
+  double get primaryCurrentB   => currentB;
+  double get primaryVoltageRkV => voltageR;
+  double get avgPrimaryVoltagekV => (voltageR + voltageY + voltageB) / 3.0;
   bool get isExporting => powerW < 0;
 }
 

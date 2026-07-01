@@ -272,7 +272,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 10),
 
-          // MF toggle
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
@@ -345,12 +344,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+
   Widget _buildError() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const Text('Check here'),
           const Icon(Icons.wifi_off_rounded,
               size: 48, color: AppColors.textMuted),
           const SizedBox(height: 16),
@@ -420,7 +421,6 @@ class _PulseDotState extends State<_PulseDot>
 
   @override
   void dispose() { _ctrl.dispose(); super.dispose(); }
-
   @override
   Widget build(BuildContext context) => FadeTransition(
     opacity: _anim,
@@ -431,7 +431,6 @@ class _PulseDotState extends State<_PulseDot>
     ),
   );
 }
-
 
 class _NetworkChecklist extends StatelessWidget {
   const _NetworkChecklist();
