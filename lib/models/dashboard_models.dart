@@ -194,6 +194,7 @@ class MeterReading {
   double get primaryVoltageRkV => voltageR;
   double get avgPrimaryVoltagekV => (voltageR + voltageY + voltageB) / 3.0;
   bool get isExporting => powerW < 0;
+  bool get isLagging   => powerVAR >= 0;   // positive VAR = lagging, negative = leading
 }
 
 

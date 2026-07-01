@@ -216,18 +216,17 @@ class _MeterCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final active      = meter.isActive;
     final statusColor = active ? AppColors.online : AppColors.offline;
-    final badgeBg     = active ? AppColors.onlineBg : AppColors.offlineBg;
     final roleLabel   = meter.meterRole == MeterRole.main ? 'MAIN' : 'CHECK';
 
-    final vKV    = active ? '${meter.avgPrimaryVoltagekV.toStringAsFixed(2)} kV' : '—';
-    final pLabel = active
-        ? '${meter.isExporting ? '−' : ''}${formatPower(meter.primaryPowerW.abs(), powerUnit)}'
+    final activeLabel = meter.isExporting ? 'Export' : 'Import';
+    final activeValue = active
+        ? formatPower(meter.primaryPowerW.abs(), powerUnit)
         : '—';
-    final rMVAR  = active
-        ? '${(meter.primaryPowerVAR / 1_000_000).toStringAsFixed(3)} MVAR' : '—';
-    final iR = active ? '${meter.primaryCurrentR.toStringAsFixed(0)} A' : '—';
-    final iY = active ? '${meter.primaryCurrentY.toStringAsFixed(0)} A' : '—';
-    final iB = active ? '${meter.primaryCurrentB.toStringAsFixed(0)} A' : '—';
+
+    final reactiveLabel = meter.isLagging ? 'Lag' : 'Lead';
+    final reactiveValue = active
+        ? '${(meter.primaryPowerVAR.abs() / 1_000_000).toStringAsFixed(3)} MVAR'
+        : '—';
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -239,68 +238,101 @@ class _MeterCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header: status dot, feeder name, role badge
+          Row(
+            children: [
+              Container(
+                width: 8, height: 8,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: statusColor),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(meter.feederName,
+                    style: AppText.cardTitle.copyWith(fontSize: 15)),
+              ),
+              _tag(roleLabel),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // PH table
+          Row(
+            children: [
+              Expanded(flex: 2, child: Text('PH', style: AppText.statLabel)),
+              Expanded(flex: 3, child: Text('CURR (A)', style: AppText.statLabel, textAlign: TextAlign.center)),
+              Expanded(flex: 3, child: Text('VOLT', style: AppText.statLabel, textAlign: TextAlign.right)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          _phRow('R', meter.currentR, meter.voltageR),
+          _phRow('Y', meter.currentY, meter.voltageY),
+          _phRow('B', meter.currentB, meter.voltageB),
+
+          const SizedBox(height: 12),
+
+          // Active / Reactive boxes
           Row(
             children: [
               Expanded(
-                child: Text(meter.feederName,
-                    style: AppText.cardTitle.copyWith(fontSize: 14)),
-              ),
-              _tag(roleLabel),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: badgeBg, borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCardHover,
+                    borderRadius: BorderRadius.circular(8),
+                    border: const Border(left: BorderSide(color: AppColors.accent, width: 3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ACTIVE', style: AppText.statLabel),
+                      const SizedBox(height: 3),
+                      Text('$activeValue · $activeLabel',
+                          style: AppText.cardTitle.copyWith(fontSize: 13)),
+                    ],
+                  ),
                 ),
-                child: Text(active ? 'ACTIVE' : 'INACTIVE',
-                    style: AppText.badge.copyWith(color: statusColor)),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgCardHover,
+                    borderRadius: BorderRadius.circular(8),
+                    border: const Border(left: BorderSide(color: Color(0xFFF59E0B), width: 3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('REACTIVE', style: AppText.statLabel),
+                      const SizedBox(height: 3),
+                      Text('$reactiveValue · $reactiveLabel',
+                          style: AppText.cardTitle.copyWith(fontSize: 13)),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
-
-          if (meter.isExporting) ...[
-            const SizedBox(height: 8),
-            _exportBanner(),
-          ],
-
-          const SizedBox(height: 12),
-          _divider(),
-          const SizedBox(height: 10),
-
-          Row(children: [
-            Expanded(child: _metric('Voltage', vKV)),
-            Expanded(child: _metric('Active Power', pLabel)),
-            Expanded(child: _metric('Reactive', rMVAR)),
-          ]),
-
-          const SizedBox(height: 12),
-
-          // Phase row
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.bgCardHover,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(children: [
-              Expanded(child: _phase('R', iR, const Color(0xFFEF4444))),
-              Expanded(child: _phase('Y', iY, const Color(0xFFF59E0B))),
-              Expanded(child: _phase('B', iB, const Color(0xFF3B82F6))),
-            ]),
-          ),
-
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: _metric('MF', '${meter.multiplicationFactor}')),
-            Expanded(child: _metric('CT', (meter.ctPrimary / meter.ctSecondary).toStringAsFixed(0))),
-            Expanded(child: _metric('PT', (meter.ptPrimary / meter.ptSecondary).toStringAsFixed(0))),
-          ]),
         ],
       ),
     );
   }
+
+  Widget _phRow(String label, double curr, double volt) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: Row(
+      children: [
+        Expanded(flex: 2, child: Text(label, style: AppText.statLabel)),
+        Expanded(flex: 3, child: Text(curr.toStringAsFixed(2),
+            textAlign: TextAlign.center,
+            style: AppText.cardTitle.copyWith(fontSize: 13))),
+        Expanded(flex: 3, child: Text(volt.toStringAsFixed(2),
+            textAlign: TextAlign.right,
+            style: AppText.cardTitle.copyWith(fontSize: 13))),
+      ],
+    ),
+  );
 
   Widget _tag(String text) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -314,60 +346,5 @@ class _MeterCard extends StatelessWidget {
           color: AppColors.textSecondary,
           fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5,
         )),
-  );
-
-  Widget _exportBanner() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-    decoration: BoxDecoration(
-      color: const Color(0xFF451A03),
-      borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: const Color(0xFF92400E)),
-    ),
-    child: const Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.bolt, size: 12, color: Color(0xFFFBBF24)),
-        SizedBox(width: 4),
-        Text('Export direction',
-            style: TextStyle(color: Color(0xFFFBBF24),
-                fontSize: 11, fontWeight: FontWeight.w600)),
-      ],
-    ),
-  );
-
-  Widget _divider() => Container(
-      height: 1, color: AppColors.border);
-
-  Widget _metric(String label, String value) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: AppText.statLabel),
-      const SizedBox(height: 3),
-      Text(value,
-          style: AppText.cardTitle.copyWith(fontSize: 13)),
-    ],
-  );
-
-  Widget _phase(String label, String value, Color color) => Row(
-    children: [
-      Container(
-        width: 8, height: 8,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-      ),
-      const SizedBox(width: 5),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label,
-                style: const TextStyle(color: AppColors.textSecondary,
-                    fontSize: 9, fontWeight: FontWeight.bold)),
-            Text(value,
-                style: const TextStyle(color: AppColors.textPrimary,
-                    fontSize: 11, fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
-    ],
   );
 }
